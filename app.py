@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask
 import pytest
 
 app = Flask(__name__)
@@ -6,17 +6,7 @@ app = Flask(__name__)
 # Ruta principal
 @app.route('/')
 def hello_world():
-    return "¡1234567890!"
-
-# Ruta mínima de IA
-@app.route('/ai', methods=['POST'])
-def ai():
-    data = request.json
-    prompt = data.get("prompt", "")
-    if not prompt:
-        return jsonify({"response": "Por favor envía un prompt."})
-    return jsonify({"response": f"Respuesta generada para: {prompt}"})
-
+    return "hola me llamo jofre y este es mi prueba de axamen"
 
 # === PRUEBAS AUTOMATIZADAS ===
 def run_tests():
@@ -29,12 +19,8 @@ def run_tests():
     def test_home(client):
         response = client.get('/')
         assert response.status_code == 200
-        assert "Jofre Bedón".encode() in response.data
-
-    def test_ai(client):
-        response = client.post('/ai', json={"prompt": "Hola"})
-        assert response.status_code == 200
-        assert "Hola" in response.get_json()["response"]
+        # Verificamos que tu mensaje salga correctamente
+        assert "hola me llamo jofre".encode() in response.data
 
     pytest.main([__file__])
 

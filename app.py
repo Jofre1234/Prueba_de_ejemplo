@@ -6,7 +6,7 @@ app = Flask(__name__)
 # Ruta principal
 @app.route('/')
 def hello_world():
-    return "¡Hola! Mi prueba final Jofre Bedón!"
+    return "¡1234567890!"
 
 # Ruta mínima de IA
 @app.route('/ai', methods=['POST'])

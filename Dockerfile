@@ -1,17 +1,17 @@
-# Imagen de Python
-FROM python:3.11-slim
+FROM python:3.9-slim
 
-# Establecer directorio de trabajo
+# Carpeta de trabajo
 WORKDIR /app
 
-# Copiar dependencias y código
-COPY . .
-
-# Instalar Flask
+# Instalamos los requerimientos primero (para aprovechar caché)
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Exponer el puerto donde corre Flask
+# Copiamos el resto del código
+COPY . .
+
+# IMPORTANTE: Exponemos el puerto 5000
 EXPOSE 5000
 
-# Comando por defecto
+# COMANDO DE ARRANQUE: Obligamos a ejecutar app.py directamente
 CMD ["python", "app.py"]

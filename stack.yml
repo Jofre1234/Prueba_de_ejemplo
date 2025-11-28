@@ -12,11 +12,11 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.jofre-app.entrypoints=http"
-        - "traefik.http.routers.jofre-app.rule=Host(`moreno.byronrm.com`)"
+        - "traefik.http.routers.jofre-app.rule=Host(`prueba.byronrm.com`)"
         - "traefik.http.middlewares.jofre-app-https-redirect.redirectscheme.scheme=https"
         - "traefik.http.routers.jofre-app.middlewares=jofre-app-https-redirect"
         - "traefik.http.routers.jofre-app-secure.entrypoints=https"
-        - "traefik.http.routers.jofre-app-secure.rule=Host(`moreno.byronrm.com`)"
+        - "traefik.http.routers.jofre-app-secure.rule=Host(`prueba.byronrm.com`)"
         - "traefik.http.routers.jofre-app-secure.tls=true"
         - "traefik.http.routers.jofre-app-secure.tls.certresolver=http"
         - "traefik.http.routers.jofre-app-secure.service=jofre-app"

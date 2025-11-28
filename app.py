@@ -8,18 +8,47 @@ app = Flask(__name__)
 def hello_world():
     return "hola me llamo jofre y este es mi prueba de axamen de IA"
 
-# Ruta de Chat con IA
-@app.route('/ai', methods=['POST'])
+# Ruta de Chat con IA (Ahora permite GET para ver la web y POST para chatear)
+@app.route('/ai', methods=['GET', 'POST'])
 def ai():
-    # Recibimos el mensaje del usuario
+    # 1. Si entras desde el navegador (GET), te mostramos la cajita de chat
+    if request.method == 'GET':
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head><title>Chat IA</title></head>
+        <body style="font-family: sans-serif; text-align: center; padding: 20px;">
+            <h2>🤖 Chat de Prueba</h2>
+            <input type="text" id="msg" placeholder="Escribe tu mensaje..." style="padding: 10px; width: 60%;">
+            <button onclick="enviar()" style="padding: 10px;">Enviar</button>
+            <p id="respuesta" style="margin-top: 20px; font-weight: bold; color: blue;"></p>
+
+            <script>
+                async function enviar() {
+                    const texto = document.getElementById('msg').value;
+                    const respDiv = document.getElementById('respuesta');
+                    respDiv.innerText = "Pensando...";
+                    
+                    const res = await fetch('/ai', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({prompt: texto})
+                    });
+                    const data = await res.json();
+                    respDiv.innerText = data.response;
+                }
+            </script>
+        </body>
+        </html>
+        """
+    
+    # 2. Si es el sistema enviando el mensaje (POST)
     data = request.json
     prompt = data.get("prompt", "")
     
-    # Si no envían nada, pedimos un prompt
     if not prompt:
         return jsonify({"response": "Por favor envía un prompt."})
     
-    # Aquí devolvemos la respuesta simulada
     return jsonify({"response": f"Respuesta de IA para: {prompt}"})
 
 
@@ -34,7 +63,6 @@ def run_tests():
     def test_home(client):
         response = client.get('/')
         assert response.status_code == 200
-        # Verificamos que tu nombre esté en la respuesta
         assert "jofre".encode() in response.data
 
     def test_ai(client):

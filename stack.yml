@@ -2,7 +2,8 @@ version: '3.9'
 
 services:
   jofre-app:
-    image: ghcr.io/jofre1234/jofre_bed-n_5to_a:1.0.0 
+    # CAMBIO IMPORTANTE: Cambiamos :1.0.0 por :latest para que siempre baje la ultima actualizacion
+    image: ghcr.io/jofre1234/jofre_bed-n_5to_a:latest
     deploy:
       replicas: 1
       resources:

@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  jofre-app:
+    image: ghcr.io/jofre1234/jofre_bed-n_5to_a:1.0.0 
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.jofre-app.entrypoints=http"
+        - "traefik.http.routers.jofre-app.rule=Host(`moreno.byronrm.com`)"
+        - "traefik.http.middlewares.jofre-app-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.jofre-app.middlewares=jofre-app-https-redirect"
+        - "traefik.http.routers.jofre-app-secure.entrypoints=https"
+        - "traefik.http.routers.jofre-app-secure.rule=Host(`moreno.byronrm.com`)"
+        - "traefik.http.routers.jofre-app-secure.tls=true"
+        - "traefik.http.routers.jofre-app-secure.tls.certresolver=http"
+        - "traefik.http.routers.jofre-app-secure.service=jofre-app"
+        - "traefik.http.services.jofre-app.loadbalancer.server.port=5000"
+        - "traefik.docker.network=traefik-public"
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+    external: true

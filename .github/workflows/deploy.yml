@@ -1,0 +1,114 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+# Agregar
+name: Python application
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    # PEQUEÑA MODIFICACIÓN: La variable IMAGE_NAME con 'lower()' se ha eliminado de aquí
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_TAG: 1.0.0 
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.11"
+
+    # 🎯 PASO NUEVO: Calcula el nombre del repositorio en minúsculas usando Shell
+    - name: ⚙️ Calcular Nombre de Imagen en Minúsculas
+      id: image_vars # Le damos un ID para referenciar su salida
+      run: |
+        # Usa el comando 'tr' de Linux para convertir a minúsculas y lo exporta
+        LOWERCASE_REPO=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+        echo "image_name=$LOWERCASE_REPO" >> $GITHUB_OUTPUT
+
+    - name: 🔐 Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 🏗️ Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        # ✅ Usa la nueva variable de salida: steps.image_vars.outputs.image_name
+        tags: ${{ env.REGISTRY }}/${{ steps.image_vars.outputs.image_name }}:${{ env.IMAGE_TAG }}
+
+    - name: 🧾 Mostrar variables básicas (solo locales, no secretos)
+      run: |
+        echo "Probando conexión SSH con:"
+        echo "Host: ${{ secrets.VPS_HOST }}"
+        echo "Usuario: ${{ secrets.VPS_USER }}"
+        echo "Puerto: ${{ secrets.VPS_SSH_PORT }}"
+        echo "Password: ${{ secrets.VPS_PASSWORD }}"
+    - name: 🧪 Probar conexión SSH
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_SSH_PORT }}
+        script: |
+          echo "✅ Conexión exitosa desde GitHub Actions"
+          hostname
+          whoami
+          uptime
+        
+    - name: Pasar el stack.yml al servidor
+      uses: appleboy/scp-action@v1
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_SSH_PORT }}
+        source: "stack.yml"
+        target: "/home/${{ secrets.VPS_USER }}/despliegue"
+    
+    - name: Despliegue de los servicios
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_SSH_PORT }}
+        script: |
+          echo "✅ Desplegando servicios"        
+          cd ~/despliegue
+
+          # Paso 1 descagar la imagen 
+          #echo "==> descargando la imagen del GHCR"
+
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u Jofre1234 --password-stdin
+          # ✅ CORRECCIÓN FINAL: Pull de la imagen usando la nueva variable de output
+          docker pull ${{ env.REGISTRY }}/${{ steps.image_vars.outputs.image_name }}:${{ env.IMAGE_TAG }}
+
+          #Paso 2 borrar el stack
+
+          docker stack rm jofre || true 
+
+          sleep 30
+
+          #Paso 3 de
+          echo "==> Desplegando stack..."
+
+          docker stack deploy -c stack.yml --with-registry-auth jofre
+
+          docker ps
+          
